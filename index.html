@@ -27,6 +27,11 @@
             <textarea id="query-string" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" rows="4">.data[] | select(.metro == "Brisbane") | .name</textarea>
         </div>
 
+        <div class="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <h2 class="text-sm font-medium text-gray-700">Debug Output:</h2>
+            <pre id="debug-output" class="text-sm text-gray-800"></pre>
+        </div>
+
         <button id="apply-query" class="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Apply Query</button>
     </div>
 
@@ -42,8 +47,8 @@
                 return query
                     .replace(/\.data\[\]/g, "data.data") // Convert .data[] to data.data
                     .replace(/select\(\.([a-zA-Z0-9_]+) == \"(.*?)\"\)/g, "filter(item => item.$1 === '$2')") // Convert select to filter
-                    .replace(/\s*\|\s*/g, ".") // Replace | with . for chaining
-                    .replace(/\.name$/g, ".map(item => item.name)") // Handle .name at the end
+                    .replace(/\|/g, ".") // Replace | with . for chaining
+                    .replace(/\.name/g, ".map(item => item.name)") // Handle .name anywhere
                     .trim();
             }
             return query;
@@ -82,6 +87,7 @@
 
                 try {
                     const jsQuery = parseJQToJS(queryString);
+                    $('#debug-output').text(jsQuery); // Display the parsed query
                     const queryFunction = new Function('data', `return ${jsQuery}`);
                     const filteredData = queryFunction(fetchedData);
                     const formattedData = JSON.stringify(filteredData, null, 2);
