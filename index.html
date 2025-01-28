@@ -36,7 +36,7 @@
     </div>
 
     <footer class="mt-6 text-center text-gray-500 text-sm">
-        Revision: January 28, 2025 | Epoch: 1738062980
+        Revision: January 28, 2025 | Epoch: 1738063180
     </footer>
 
     <script>
@@ -47,7 +47,8 @@
                 return query
                     .replace(/\.data\[\]/g, "data.data") // Convert .data[] to data.data
                     .replace(/select\(\.([a-zA-Z0-9_]+) == \"(.*?)\"\)/g, "filter(item => item.$1 === '$2')") // Convert select to filter
-                    .replace(/\|/g, ".") // Replace | with . for chaining
+                    .replace(/\s*\|\s*/g, ".") // Replace | with . without adding extra spaces
+                    .replace(/\.\./g, ".") // Remove any unintended double dots
                     .replace(/\.name/g, ".map(item => item.name)") // Handle .name anywhere
                     .trim();
             }
