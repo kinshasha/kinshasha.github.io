@@ -40,9 +40,9 @@
         function parseJQToJS(query) {
             if (query.includes("select") && query.includes("|")) {
                 return query
-                    .replace(/\.data\[\]/, "data.data")
+                    .replace(/\.data\[\]/g, "data.data")
                     .replace(/select\(\.([a-zA-Z0-9_]+) == \"(.*?)\"\)/g, "filter(item => item.$1 === '$2')")
-                    .replace(/\|/g, ".")
+                    .replace(/\s*\|\s*/g, ".") // Replace "|" with "." while trimming spaces
                     .trim();
             }
             return query;
