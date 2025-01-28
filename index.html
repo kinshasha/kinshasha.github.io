@@ -36,7 +36,7 @@
     </div>
 
     <footer class="mt-6 text-center text-gray-500 text-sm">
-        Revision: January 28, 2025 | Epoch: 1738064580
+        Revision: January 28, 2025 | Epoch: 1738064780
     </footer>
 
     <script>
@@ -53,7 +53,9 @@
                 .replace(/\.name/g, ".map(item => item.name)") // Handle .name anywhere
                 .replace(/\s*\|\s*/g, ".") // Replace | with . without adding extra spaces
                 .replace(/\.sort/g, ".sort()") // Handle | sort
-                .replace(/\(\(.*?\)\)/g, "$1") // Handle nested brackets
+                .replace(/\((.*?)\)/g, "($1)") // Ensure proper parentheses
+                .replace(/\{\}/g, "{}") // Handle empty objects
+                .replace(/\[\]/g, "[]") // Handle empty arrays
                 .trim();
         }
 
