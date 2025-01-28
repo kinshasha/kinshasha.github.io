@@ -23,8 +23,8 @@
         </div>
 
         <div class="mt-6">
-            <label for="jquery-string" class="block text-sm font-medium text-gray-700">Enter jQuery Filter String:</label>
-            <input type="text" id="jquery-string" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" value=".data.filter(item => item.metro === 'Brisbane').map(item => item.name)">
+            <label for="query-string" class="block text-sm font-medium text-gray-700">Enter JavaScript Query:</label>
+            <textarea id="query-string" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" rows="4">data.data.filter(item => item.metro === 'Brisbane').map(item => item.name)</textarea>
         </div>
 
         <button id="apply-query" class="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Apply Query</button>
@@ -43,7 +43,7 @@
                 }
 
                 $.getJSON(url, function(data) {
-                    if (data && data.data) {
+                    if (data) {
                         fetchedData = data;
                         $('#json-output').text('Data fetched successfully. You can now apply a query.');
                     } else {
@@ -57,7 +57,7 @@
             });
 
             $('#apply-query').on('click', function() {
-                const queryString = $('#jquery-string').val().trim();
+                const queryString = $('#query-string').val().trim();
 
                 if (!fetchedData) {
                     alert('Please fetch data first before applying a query.');
@@ -70,7 +70,7 @@
                     const formattedData = JSON.stringify(filteredData, null, 2);
                     $('#json-output').text(formattedData);
                 } catch (e) {
-                    $('#json-output').text(`Error in jQuery string: ${e.message}`);
+                    $('#json-output').text(`Error in query: ${e.message}`);
                 }
             });
         });
