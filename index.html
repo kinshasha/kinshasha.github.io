@@ -31,7 +31,7 @@
     </div>
 
     <footer class="mt-6 text-center text-gray-500 text-sm">
-        Revision: January 28, 2025 | Epoch: 1738062180
+        Revision: January 28, 2025 | Epoch: 1738062780
     </footer>
 
     <script>
@@ -40,9 +40,10 @@
         function parseJQToJS(query) {
             if (query.includes("select") && query.includes("|")) {
                 return query
-                    .replace(/\.data\[\]/g, "data.data")
-                    .replace(/select\(\.([a-zA-Z0-9_]+) == \"(.*?)\"\)/g, "filter(item => item.$1 === '$2')")
-                    .replace(/\s*\|\s*/g, ".") // Replace "|" with "." while trimming spaces
+                    .replace(/\.data\[\]/g, "data.data") // Convert .data[] to data.data
+                    .replace(/select\(\.([a-zA-Z0-9_]+) == \"(.*?)\"\)/g, "filter(item => item.$1 === '$2')") // Convert select to filter
+                    .replace(/\s*\|\s*/g, ".") // Replace | with . for chaining
+                    .replace(/\.name$/g, ".map(item => item.name)") // Handle .name at the end
                     .trim();
             }
             return query;
