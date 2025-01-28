@@ -13,7 +13,12 @@
 
         <div class="mb-4">
             <label for="json-url" class="block text-sm font-medium text-gray-700">Enter JSON URL:</label>
-            <input type="text" id="json-url" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="https://api.megaport.com/v3/locations">
+            <input type="text" id="json-url" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" value="https://api.megaport.com/v3/locations">
+        </div>
+
+        <div class="mb-4">
+            <label for="jquery-string" class="block text-sm font-medium text-gray-700">Enter jQuery Filter String:</label>
+            <input type="text" id="jquery-string" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" value=".data.filter(item => item.metro === 'Brisbane').map(item => item.name)">
         </div>
 
         <button id="fetch-data" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Fetch Data</button>
@@ -27,26 +32,30 @@
         $(document).ready(function() {
             $('#fetch-data').on('click', function() {
                 const url = $('#json-url').val().trim();
+                const queryString = $('#jquery-string').val().trim();
 
                 if (!url) {
                     alert('Please enter a valid JSON URL.');
                     return;
                 }
 
-                $.getJSON(url, function(data) {
-                    if (data && data.data) {
-                        const filteredData = data.data
-                            .filter(item => item.metro === "Brisbane")
-                            .map(item => item.name);
+                try {
+                    const queryFunction = new Function('data', `return ${queryString}`);
 
-                        const formattedData = JSON.stringify(filteredData, null, 2);
-                        $('#json-output').text(formattedData);
-                    } else {
-                        $('#json-output').text('No valid data found in the response.');
-                    }
-                }).fail(function(jqxhr, textStatus, error) {
-                    $('#json-output').text(`Error fetching JSON data: ${error}`);
-                });
+                    $.getJSON(url, function(data) {
+                        if (data && data.data) {
+                            const filteredData = queryFunction(data);
+                            const formattedData = JSON.stringify(filteredData, null, 2);
+                            $('#json-output').text(formattedData);
+                        } else {
+                            $('#json-output').text('No valid data found in the response.');
+                        }
+                    }).fail(function(jqxhr, textStatus, error) {
+                        $('#json-output').text(`Error fetching JSON data: ${error}`);
+                    });
+                } catch (e) {
+                    $('#json-output').text(`Error in jQuery string: ${e.message}`);
+                }
             });
         });
     </script>
