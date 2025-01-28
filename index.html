@@ -24,11 +24,15 @@
 
         <div class="mt-6">
             <label for="query-string" class="block text-sm font-medium text-gray-700">Enter JavaScript Query:</label>
-            <textarea id="query-string" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" rows="4">data.data.filter(item => item.metro === 'Brisbane').map(item => item.name)</textarea>
+            <textarea id="query-string" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" rows="4">data.data.filter(item => item.metro === \"Brisbane\").map(item => item.name)</textarea>
         </div>
 
         <button id="apply-query" class="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Apply Query</button>
     </div>
+
+    <footer class="mt-6 text-center text-gray-500 text-sm">
+        Revision: January 28, 2025 | Epoch: 1738060800
+    </footer>
 
     <script>
         let fetchedData = null;
