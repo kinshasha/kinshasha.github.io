@@ -24,7 +24,7 @@
 
         <div class="mt-6">
             <label for="query-string" class="block text-sm font-medium text-gray-700">Enter Query (JQ or JavaScript):</label>
-            <textarea id="query-string" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" rows="4">.data[] | select(.metro == "Brisbane") | .name | sort</textarea>
+            <textarea id="query-string" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" rows="4">.data[] | select(.metro == "Brisbane")</textarea>
         </div>
 
         <button id="apply-query" class="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Apply Query</button>
@@ -36,11 +36,7 @@
     </div>
 
     <footer class="mt-6 text-center text-gray-500 text-sm">
-<<<<<<< HEAD
         Revision: January 28, 2025 | Epoch: 1738064780
-=======
-        Revision: January 28, 2025 | Epoch: 1738064180
->>>>>>> parent of 647e6d6 (Update index.html)
     </footer>
 
     <script>
@@ -48,30 +44,9 @@
 
         function parseJQToJS(query) {
             return query
-                .replace(/\.data\[\]/g, "data.data") // Convert .data[] to data.data
-                .replace(/select\(\.([a-zA-Z0-9_]+) == \"(.*?)\"\)/g, "filter(item => item.$1.toLowerCase() === '$2'.toLowerCase())") // Convert select to case-insensitive filter
-                .replace(/\?\./g, "?.") // Handle optional chaining
-                .replace(/\s*\|\s*/g, ".") // Replace | with . without adding extra spaces
-                .replace(/\.\./g, ".") // Remove any unintended double dots
-                .replace(/\.name/g, ".map(item => item.name)") // Handle .name anywhere
-                .replace(/\.sort/g, ".sort()") // Handle | sort
-<<<<<<< HEAD
-                .replace(/\((.*?)\)/g, "($1)") // Ensure proper parentheses
-                .replace(/\{\}/g, "{}") // Handle empty objects
-                .replace(/\[\]/g, "[]") // Handle empty arrays
-=======
-                .replace(/map_values\(\)/g, "map(item => Object.values(item))") // Handle map_values()
-                .replace(/sort_by\(\.([a-zA-Z0-9_]+)\)/g, "sort((a, b) => a.$1 > b.$1 ? 1 : -1)") // Handle sort_by(.key)
-                .replace(/\.length/g, ".length") // Handle length
-                .replace(/keys\(\)/g, "Object.keys") // Handle keys()
-                .replace(/del\(\.([a-zA-Z0-9_]+)\)/g, "map(item => { delete item.$1; return item; })") // Handle del(.foo)
-                .replace(/to_entries \| map\(\[\.key, \.value\]\)/g, "Object.entries(item).map(([key, value]) => [key, value])") // Handle to_entries | map([.key, .value])
-                .replace(/\[\d+\]/g, match => match) // Handle specific index access like .[0]
-                .replace(/\[\d+:\d+\]/g, match => match.replace(/\[(\d+):(\d+)\]/, ".slice($1, $2)")) // Handle slicing like .[2:4]
-                .replace(/map\(\.\+1\)/g, "map(item => item + 1)") // Handle map(.+1)
-                .replace(/add\(\)/g, "reduce((a, b) => a + b, 0)") // Handle add
-                .replace(/del\(\.\[(\d+,?\s?)+\]\)/g, "map(item => { [ $1 ].forEach(i => delete item[i]); return item; })") // Handle del(.[1, 2])
->>>>>>> parent of 647e6d6 (Update index.html)
+                .replace(/\\.data\\[\\]/g, "data.data") // Convert .data[] to data.data
+                .replace(/select\\((.*?)\\)/g, "filter(item => $1)") // Convert select to filter
+                .replace(/ and /g, " && ") // Handle AND
                 .trim();
         }
 
