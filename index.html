@@ -10,82 +10,108 @@
 <body class="bg-gray-100 min-h-screen flex items-center justify-center">
     <div class="container mx-auto p-6 bg-white rounded-xl shadow-lg">
         <h1 class="text-2xl font-bold mb-4">JSON Data Viewer</h1>
+
         <div class="mb-4">
             <label for="json-url" class="block text-sm font-medium text-gray-700">Enter JSON URL:</label>
             <input type="text" id="json-url" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" value="https://api.megaport.com/v3/locations">
         </div>
+
         <button id="fetch-data" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Fetch Data</button>
         <div id="loading" class="mt-2 text-blue-600 hidden">Loading...</div>
+
         <div id="output" class="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200 overflow-auto" style="max-height: 400px;">
             <pre id="json-output" class="text-sm text-gray-800"></pre>
         </div>
+
         <div class="mt-6">
             <label for="query-string" class="block text-sm font-medium text-gray-700">Enter Query (JQ or JavaScript):</label>
             <textarea id="query-string" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" rows="4">.data[] | select(.metro == "Brisbane" and .status == "Active") | .name | sort</textarea>
         </div>
+
         <button id="apply-query" class="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Apply Query</button>
+
         <div class="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
             <h2 class="text-sm font-medium text-gray-700">Translated JavaScript Query:</h2>
             <pre id="debug-output" class="text-sm text-gray-800"></pre>
-            <p id="execution-time" class="text-xs text-gray-500"></p>
         </div>
     </div>
+
     <footer class="mt-6 text-center text-gray-500 text-sm">
         Revision: January 29, 2025 | Epoch: 1738067492
     </footer>
+
     <script>
         let fetchedData = null;
-        
-        function caseInsensitiveCompare(a, b) {
-            return a?.toString().toLowerCase() === b?.toString().toLowerCase();
-        }
-        
+
         function parseJQToJS(query) {
             return query
-                .replace(/\.data\[\]/g, "data.data")
-                .replace(/select\(\.([a-zA-Z0-9_]+) == \"(.*?)\"\s+and\s+\.([a-zA-Z0-9_]+) == \"(.*?)\"\)/g, "filter(item => caseInsensitiveCompare(item.$1, '$2') && caseInsensitiveCompare(item.$3, '$4'))")
-                .replace(/select\(\.([a-zA-Z0-9_]+) == \"(.*?)\"\)/g, "filter(item => caseInsensitiveCompare(item.$1, '$2'))")
-                .replace(/\?\./g, "?.")
-                .replace(/\s*\|\s*/g, ".")
-                .replace(/\.\./g, ".")
-                .replace(/\.name/g, ".map(item => item.name)")
-                .replace(/\.sort/g, ".sort()")
-                .replace(/map_values\(\)/g, "map(item => Object.values(item))")
-                .replace(/sort_by\(\.([a-zA-Z0-9_]+)\)/g, "sort((a, b) => a.$1 > b.$1 ? 1 : -1)")
-                .replace(/\.length/g, ".length")
-                .replace(/keys\(\)/g, "Object.keys")
-                .replace(/del\(\.([a-zA-Z0-9_]+)\)/g, "map(item => { delete item.$1; return item; })")
-                .replace(/to_entries \| map\(\[\.key, \.value\]\)/g, "Object.entries(item).map(([key, value]) => [key, value])")
-                .replace(/\[\d+\]/g, match => match)
-                .replace(/\[\d+:\d+\]/g, match => match.replace(/\[(\d+):(\d+)\]/, ".slice($1, $2)"))
-                .replace(/map\(\.\+1\)/g, "map(item => item + 1)")
-                .replace(/add\(\)/g, "reduce((a, b) => a + b, 0)")
-                .replace(/del\(\.\[(\d+,?\s?)+\]\)/g, "map(item => { [ $1 ].forEach(i => delete item[i]); return item; })")
+                .replace(/\.data\[\]/g, "data.data") // Convert .data[] to data.data
+                .replace(/select\(\.([a-zA-Z0-9_]+) == \"(.*?)\"\s+and\s+\.([a-zA-Z0-9_]+) == \"(.*?)\"\)/g, "filter(item => item.$1.toLowerCase() === '$2'.toLowerCase() && item.$3.toLowerCase() === '$4'.toLowerCase())") // Convert select with and condition
+                .replace(/select\(\.([a-zA-Z0-9_]+) == \"(.*?)\"\)/g, "filter(item => item.$1.toLowerCase() === '$2'.toLowerCase())") // Convert select to case-insensitive filter
+                .replace(/\?\./g, "?.") // Handle optional chaining
+                .replace(/\s*\|\s*/g, ".") // Replace | with . without adding extra spaces
+                .replace(/\.\./g, ".") // Remove any unintended double dots
+                .replace(/\.name/g, ".map(item => item.name)") // Handle .name anywhere
+                .replace(/\.sort/g, ".sort()") // Handle | sort
+                .replace(/map_values\(\)/g, "map(item => Object.values(item))") // Handle map_values()
+                .replace(/sort_by\(\.([a-zA-Z0-9_]+)\)/g, "sort((a, b) => a.$1 > b.$1 ? 1 : -1)") // Handle sort_by(.key)
+                .replace(/\.length/g, ".length") // Handle length
+                .replace(/keys\(\)/g, "Object.keys") // Handle keys()
+                .replace(/del\(\.([a-zA-Z0-9_]+)\)/g, "map(item => { delete item.$1; return item; })") // Handle del(.foo)
+                .replace(/to_entries \| map\(\[\.key, \.value\]\)/g, "Object.entries(item).map(([key, value]) => [key, value])") // Handle to_entries | map([.key, .value])
+                .replace(/\[\d+\]/g, match => match) // Handle specific index access like .[0]
+                .replace(/\[\d+:\d+\]/g, match => match.replace(/\[(\d+):(\d+)\]/, ".slice($1, $2)")) // Handle slicing like .[2:4]
+                .replace(/map\(\.\+1\)/g, "map(item => item + 1)") // Handle map(.+1)
+                .replace(/add\(\)/g, "reduce((a, b) => a + b, 0)") // Handle add
+                .replace(/del\(\.\[(\d+,?\s?)+\]\)/g, "map(item => { [ $1 ].forEach(i => delete item[i]); return item; })") // Handle del(.[1, 2])
                 .trim();
         }
 
         $(document).ready(function() {
             $('#fetch-data').on('click', function() {
                 const url = $('#json-url').val().trim();
+
                 if (!url) {
                     alert('Please enter a valid JSON URL.');
                     return;
                 }
-                $('#loading').removeClass('hidden');
+
+                $('#loading').removeClass('hidden'); // Show loading indicator
+
                 $.getJSON(url, function(data) {
-                    $('#loading').addClass('hidden');
-                    if (data && data.data) {
+                    $('#loading').addClass('hidden'); // Hide loading indicator
+                    if (data) {
                         fetchedData = data;
                         $('#json-output').text('Data fetched successfully. You can now apply a query.');
                     } else {
-                        $('#json-output').text('Invalid data structure.');
+                        $('#json-output').text('No valid data found in the response.');
                         fetchedData = null;
                     }
                 }).fail(function(jqxhr, textStatus, error) {
-                    $('#loading').addClass('hidden');
+                    $('#loading').addClass('hidden'); // Hide loading indicator
                     $('#json-output').text(`Error fetching JSON data: ${textStatus}, ${error}`);
                     fetchedData = null;
                 });
+            });
+
+            $('#apply-query').on('click', function() {
+                const queryString = $('#query-string').val().trim();
+
+                if (!fetchedData) {
+                    alert('Please fetch data first before applying a query.');
+                    return;
+                }
+
+                try {
+                    const jsQuery = parseJQToJS(queryString);
+                    $('#debug-output').text(jsQuery); // Display the parsed query
+                    const queryFunction = new Function('data', `return ${jsQuery}`);
+                    const filteredData = queryFunction(fetchedData);
+                    const formattedData = JSON.stringify(filteredData, null, 2);
+                    $('#json-output').text(formattedData);
+                } catch (e) {
+                    $('#json-output').text(`Error in query: ${e.message}`);
+                }
             });
         });
     </script>
