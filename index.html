@@ -25,19 +25,7 @@
 
         <div class="mt-6">
             <label for="query-string" class="block text-sm font-medium text-gray-700">Enter Query (JQ or JavaScript):</label>
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-            <textarea id="query-string" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" rows="4">.data[] | select(.metro == "Brisbane") | .name | sort</textarea>
-=======
             <textarea id="query-string" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" rows="4">.data[] | select(.metro == "Brisbane" and .status == "Active") | .name | sort</textarea>
->>>>>>> Stashed changes
-=======
-            <textarea id="query-string" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" rows="4">.data[] | select(.metro == "Brisbane" and .status == "Active") | .name | sort</textarea>
->>>>>>> Stashed changes
-=======
-            <textarea id="query-string" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" rows="4">.data[] | select(.metro == "Brisbane" and .status == "Active") | .name | sort</textarea>
->>>>>>> Stashed changes
         </div>
 
         <button id="apply-query" class="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Apply Query</button>
@@ -49,19 +37,7 @@
     </div>
 
     <footer class="mt-6 text-center text-gray-500 text-sm">
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-        Revision: January 28, 2025 | Epoch: 1738064180
-=======
         Revision: January 29, 2025 | Epoch: 1738067492
->>>>>>> Stashed changes
-=======
-        Revision: January 29, 2025 | Epoch: 1738067492
->>>>>>> Stashed changes
-=======
-        Revision: January 29, 2025 | Epoch: 1738067492
->>>>>>> Stashed changes
     </footer>
 
     <script>
@@ -70,18 +46,7 @@
         function parseJQToJS(query) {
             return query
                 .replace(/\.data\[\]/g, "data.data") // Convert .data[] to data.data
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
                 .replace(/select\(\.([a-zA-Z0-9_]+) == \"(.*?)\"\s+and\s+\.([a-zA-Z0-9_]+) == \"(.*?)\"\)/g, "filter(item => item.$1.toLowerCase() === '$2'.toLowerCase() && item.$3.toLowerCase() === '$4'.toLowerCase())") // Convert select with and condition
->>>>>>> Stashed changes
-=======
-                .replace(/select\(\.([a-zA-Z0-9_]+) == \"(.*?)\"\s+and\s+\.([a-zA-Z0-9_]+) == \"(.*?)\"\)/g, "filter(item => item.$1.toLowerCase() === '$2'.toLowerCase() && item.$3.toLowerCase() === '$4'.toLowerCase())") // Convert select with and condition
->>>>>>> Stashed changes
-=======
-                .replace(/select\(\.([a-zA-Z0-9_]+) == \"(.*?)\"\s+and\s+\.([a-zA-Z0-9_]+) == \"(.*?)\"\)/g, "filter(item => item.$1.toLowerCase() === '$2'.toLowerCase() && item.$3.toLowerCase() === '$4'.toLowerCase())") // Convert select with and condition
->>>>>>> Stashed changes
                 .replace(/select\(\.([a-zA-Z0-9_]+) == \"(.*?)\"\)/g, "filter(item => item.$1.toLowerCase() === '$2'.toLowerCase())") // Convert select to case-insensitive filter
                 .replace(/\?\./g, "?.") // Handle optional chaining
                 .replace(/\s*\|\s*/g, ".") // Replace | with . without adding extra spaces
