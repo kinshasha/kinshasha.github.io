@@ -27,7 +27,11 @@
             <label for="query-string" class="block text-sm font-medium text-gray-700">Enter Query (JQ or JavaScript):</label>
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
             <textarea id="query-string" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" rows="4">.data[] | select(.metro == "Brisbane") | .name | sort</textarea>
+=======
+            <textarea id="query-string" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" rows="4">.data[] | select(.metro == "Brisbane" and .status == "Active") | .name | sort</textarea>
+>>>>>>> Stashed changes
 =======
             <textarea id="query-string" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" rows="4">.data[] | select(.metro == "Brisbane" and .status == "Active") | .name | sort</textarea>
 >>>>>>> Stashed changes
@@ -47,7 +51,11 @@
     <footer class="mt-6 text-center text-gray-500 text-sm">
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         Revision: January 28, 2025 | Epoch: 1738064180
+=======
+        Revision: January 29, 2025 | Epoch: 1738067492
+>>>>>>> Stashed changes
 =======
         Revision: January 29, 2025 | Epoch: 1738067492
 >>>>>>> Stashed changes
@@ -64,6 +72,10 @@
                 .replace(/\.data\[\]/g, "data.data") // Convert .data[] to data.data
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+                .replace(/select\(\.([a-zA-Z0-9_]+) == \"(.*?)\"\s+and\s+\.([a-zA-Z0-9_]+) == \"(.*?)\"\)/g, "filter(item => item.$1.toLowerCase() === '$2'.toLowerCase() && item.$3.toLowerCase() === '$4'.toLowerCase())") // Convert select with and condition
+>>>>>>> Stashed changes
 =======
                 .replace(/select\(\.([a-zA-Z0-9_]+) == \"(.*?)\"\s+and\s+\.([a-zA-Z0-9_]+) == \"(.*?)\"\)/g, "filter(item => item.$1.toLowerCase() === '$2'.toLowerCase() && item.$3.toLowerCase() === '$4'.toLowerCase())") // Convert select with and condition
 >>>>>>> Stashed changes
