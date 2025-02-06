@@ -46,19 +46,15 @@
         function parseJQToJS(query) {
             return query
                 .replace(/\.data\[\]/g, "data.data")
-                .replace(/select\(\.([a-zA-Z0-9_]+) == \"(.*?)\"\s+and\s+\.([a-zA-Z0-9_]+) == \"(.*?)\"\)/g, "filter(item => item.$1 && item.$1.toLowerCase() === '$2'.toLowerCase() && item.$3 && item.$3.toLowerCase() === '$4'.toLowerCase())")
-                .replace(/select\(\.([a-zA-Z0-9_]+) == \"(.*?)\"\)/g, "filter(item => item.$1 && item.$1.toLowerCase() === '$2'.toLowerCase())")
+                .replace(/select\(\.([a-zA-Z0-9_]+) == \"(.*?)\"\s+and\s+\.([a-zA-Z0-9_]+) == \"(.*?)\"\)/g, "filter(item => (item.$1?.toLowerCase?.() === '$2'.toLowerCase()) && (item.$3?.toLowerCase?.() === '$4'.toLowerCase()))")
+                .replace(/select\(\.([a-zA-Z0-9_]+) == \"(.*?)\"\)/g, "filter(item => item.$1?.toLowerCase?.() === '$2'.toLowerCase())")
                 .replace(/map_values\(\)/g, "map(item => Object.values(item))")
-                .replace(/sort_by\(\.([a-zA-Z0-9_]+)\)/g, "sort((a, b) => a.$1 > b.$1 ? 1 : -1)")
+                .replace(/sort_by\(\.([a-zA-Z0-9_]+)\)/g, "sort((a, b) => a.$1?.localeCompare(b.$1, 'en', { sensitivity: 'base' }))")
                 .replace(/\.length/g, ".length")
                 .replace(/keys\(\)/g, "Object.keys")
                 .replace(/del\(\.([a-zA-Z0-9_]+)\)/g, "map(item => { delete item.$1; return item; })")
                 .replace(/to_entries \| map\(\[\.key, \.value\]\)/g, "map(item => Object.entries(item).map(([key, value]) => [key, value]))")
-                .replace(/\[\d+\]/g, match => match)
-                .replace(/\[\d+:\d+\]/g, match => match.replace(/\[(\d+):(\d+)\]/, ".slice($1, $2)"))
-                .replace(/map\(\.\+1\)/g, "map(item => item + 1)")
-                .replace(/add\(\)/g, "reduce((a, b) => a + b, 0)")
-                .replace(/del\(\.\[(\d+,?\s?)+\]\)/g, "map(item => { [ $1 ].forEach(i => delete item[i]); return item; })")
+                .replace(/\.name/g, ".map(item => item.name ?? 'Unknown')")
                 .replace(/\.sort/g, ".sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' }))")
                 .trim();
         }
