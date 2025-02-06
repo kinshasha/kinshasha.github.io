@@ -46,10 +46,10 @@
         function parseJQToJS(query) {
             return query
                 .replace(/\.data\[\]/g, "data.data")
-                .replace(/select\(\.([a-zA-Z0-9_]+) == \"(.*?)\"\s+and\s+\.([a-zA-Z0-9_]+) == \"(.*?)\"\)/g, "filter(item => (item.$1?.toLowerCase?.() === '$2'.toLowerCase()) && (item.$3?.toLowerCase?.() === '$4'.toLowerCase()))")
-                .replace(/select\(\.([a-zA-Z0-9_]+) == \"(.*?)\"\)/g, "filter(item => item.$1?.toLowerCase?.() === '$2'.toLowerCase())")
+                .replace(/select\(\.([a-zA-Z0-9_]+) == \"(.*?)\"\s+and\s+\.([a-zA-Z0-9_]+) == \"(.*?)\"\)/g, "filter(item => ((item.$1 || '').toLowerCase() === '$2'.toLowerCase()) && ((item.$3 || '').toLowerCase() === '$4'.toLowerCase()))")
+                .replace(/select\(\.([a-zA-Z0-9_]+) == \"(.*?)\"\)/g, "filter(item => (item.$1 || '').toLowerCase() === '$2'.toLowerCase())")
                 .replace(/map_values\(\)/g, "map(item => Object.values(item))")
-                .replace(/sort_by\(\.([a-zA-Z0-9_]+)\)/g, "sort((a, b) => a.$1?.localeCompare(b.$1, 'en', { sensitivity: 'base' }))")
+                .replace(/sort_by\(\.([a-zA-Z0-9_]+)\)/g, "sort((a, b) => (a.$1 || '').localeCompare(b.$1 || '', 'en', { sensitivity: 'base' }))")
                 .replace(/\.length/g, ".length")
                 .replace(/keys\(\)/g, "Object.keys")
                 .replace(/del\(\.([a-zA-Z0-9_]+)\)/g, "map(item => { delete item.$1; return item; })")
@@ -69,6 +69,7 @@
                 $('#loading').removeClass('hidden');
                 $.getJSON(url, function(data) {
                     $('#loading').addClass('hidden');
+                    console.log("Fetched Data:", data); // Debugging
                     if (data && Array.isArray(data.data)) {
                         fetchedData = data;
                         $('#json-output').text('Data fetched successfully. You can now apply a query.');
@@ -80,6 +81,24 @@
                     $('#loading').addClass('hidden');
                     $('#json-output').text(`Error fetching JSON data: ${textStatus}, ${error}`);
                     fetchedData = null;
+                });
+
+                $('#apply-query').on('click', function() {
+                    if (!fetchedData) {
+                        alert('Please fetch data first.');
+                        return;
+                    }
+                    const queryString = $('#query-string').val().trim();
+                    const jsQuery = parseJQToJS(queryString);
+                    console.log("Generated JavaScript Query:", jsQuery);
+                    $('#debug-output').text(jsQuery);
+                    try {
+                        const queryFunction = new Function('data', `return ${jsQuery}`);
+                        const filteredData = queryFunction(fetchedData);
+                        $('#json-output').text(JSON.stringify(filteredData, null, 2));
+                    } catch (e) {
+                        $('#json-output').text(`Error in query: ${e.message}`);
+                    }
                 });
             });
         });
