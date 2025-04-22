@@ -8,80 +8,144 @@
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center">
-    <div class="container mx-auto p-6 bg-white rounded-xl shadow-lg">
-        <h1 class="text-2xl font-bold mb-4">JSON Data Viewer</h1>
+    <div class="container mx-auto p-6 bg-white rounded-xl shadow-lg w-full max-w-3xl">
+        <h1 class="text-2xl font-bold mb-4 text-center">JSON Data Viewer</h1>
 
-        <div class="mb-4">
-            <label for="json-url" class="block text-sm font-medium text-gray-700">Enter JSON URL:</label>
-            <input type="text" id="json-url" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" value="https://api.megaport.com/v3/locations">
+        <!-- URL input  -->
+        <label class="block text-sm font-medium text-gray-700 mb-1" for="json-url">Enter JSON URL:</label>
+        <div class="flex gap-2 mb-4">
+            <input id="json-url" type="text" class="flex-1 rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" value="https://api.megaport.com/v3/locations" />
+            <button id="fetch-data" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700" type="button">Fetch Data</button>
         </div>
+        <span id="loading" class="hidden text-blue-600 text-sm">Loading…</span>
 
-        <button id="fetch-data" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Fetch Data</button>
-        <div id="loading" class="mt-2 text-blue-600 hidden">Loading...</div>
-
-        <div id="output" class="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200 overflow-auto" style="max-height: 400px;">
+        <!-- Results / info panel -->
+        <div id="output" class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200 overflow-auto max-h-64">
             <pre id="json-output" class="text-sm text-gray-800"></pre>
         </div>
 
-        <div class="mt-6">
-            <label for="query-string" class="block text-sm font-medium text-gray-700">Enter Query (JQ or JavaScript):</label>
-            <textarea id="query-string" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" rows="4">.data[] | select(.country == "Australia") | .name | sort</textarea>
-        </div>
+        <!-- Query input -->
+        <label class="block text-sm font-medium text-gray-700 mt-6 mb-1" for="query-string">Enter Query (JQ or JavaScript):</label>
+        <textarea id="query-string" rows="4" class="w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm">.data[] | select(.metro == "Brisbane") | .name | sort</textarea>
+        <button id="apply-query" class="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700" type="button">Apply Query</button>
 
-        <button id="apply-query" class="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Apply Query</button>
-
+        <!-- Translated JS -->
         <div class="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-            <h2 class="text-sm font-medium text-gray-700">Translated JavaScript Query:</h2>
+            <h2 class="text-sm font-medium text-gray-700">Translated JavaScript Query:</h2>
             <pre id="debug-output" class="text-sm text-gray-800"></pre>
         </div>
+
+        <!-- Copy panel -->
+        <button id="generate-output" class="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700" type="button">Generate Output</button>
+        <div id="copy-output-container" class="hidden mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <h2 class="text-sm font-medium text-gray-700">Copy and Paste Output:</h2>
+            <pre id="copy-output" class="text-sm text-gray-800"></pre>
+            <button id="copy-snippet" class="mt-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700" type="button">Copy Snippet</button>
+        </div>
+
+        <!-- Footer auto‑filled -->
+        <footer id="rev-footer" class="mt-6 text-center text-gray-500 text-sm"></footer>
     </div>
 
-    <footer class="mt-6 text-center text-gray-500 text-sm">
-        Revision: February 7, 2025 | Epoch: 1738944000
-    </footer>
+<script>
+let fetchedData = null;
 
-    <script>
-        let fetchedData = null;
+function safeReplace(source, search, replace) {
+  return source.replace(search, replace);
+}
 
-        function parseJQToJS(query) {
-            return query
-                .replace(/\.data\[\]/g, "data.data")
-                .replace(/select\(\.([a-zA-Z0-9_]+) == \"(.*?)\"\)/g, "filter(item => item.$1 && item.$1.toLowerCase() === '$2'.toLowerCase())")
-                .replace(/map_values\(\)/g, "map(item => Object.values(item))")
-                .replace(/sort_by\(\.([a-zA-Z0-9_]+)\)/g, "sort((a, b) => a.$1 > b.$1 ? 1 : -1)")
-                .replace(/\.length/g, ".length")
-                .replace(/keys\(\)/g, "Object.keys")
-                .replace(/del\(\.([a-zA-Z0-9_]+)\)/g, "map(item => { delete item.$1; return item; })")
-                .replace(/to_entries \| map\(\[\.key, \.value\]\)/g, "map(item => Object.entries(item).map(([key, value]) => [key, value]))")
-                .replace(/\.name/g, ".map(item => item.name)")
-                .replace(/\.sort/g, ".sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' }))")
-                .trim();
-        }
+function parseJQToJS(rawQuery) {
+  // minimal escaping to avoid breaking regex replacements
+  let query = rawQuery.replace(/"/g, '\\"');
 
-        $(document).ready(function() {
-            $('#fetch-data').on('click', function() {
-                const url = $('#json-url').val().trim();
-                if (!url) {
-                    alert('Please enter a valid JSON URL.');
-                    return;
-                }
-                $('#loading').removeClass('hidden');
-                $.getJSON(url, function(data) {
-                    $('#loading').addClass('hidden');
-                    if (data) {
-                        fetchedData = data;
-                        $('#json-output').text('Data fetched successfully. You can now apply a query.');
-                    } else {
-                        $('#json-output').text('No valid data found in the response.');
-                        fetchedData = null;
-                    }
-                }).fail(function(jqxhr, textStatus, error) {
-                    $('#loading').addClass('hidden');
-                    $('#json-output').text(`Error fetching JSON data: ${textStatus}, ${error}`);
-                    fetchedData = null;
-                });
-            });
-        });
-    </script>
+  // chain of replacements
+  query = query
+    .replace(/\.data\[\]/g, 'data.data')
+    .replace(/select\(\.([a-zA-Z0-9_]+) == \"(.*?)\"\)/g,
+             "filter(item => item.$1.toLowerCase() === '$2'.toLowerCase())")
+    .replace(/ and /g, ' && ')
+    .replace(/\?\./g, '?.')
+    .replace(/\s*\|\s*/g, '.')
+    .replace(/\.\./g, '.')
+    .replace(/\.name/g, '.map(item => item.name)')
+    .replace(/\.sort/g, '.sort()')
+    // extras
+    .replace(/map_values\(\)/g, 'map(item => Object.values(item))')
+    .replace(/sort_by\(\.([a-zA-Z0-9_]+)\)/g,
+             'sort((a, b) => a.$1 > b.$1 ? 1 : -1)')
+    .replace(/unique\b/g, 'Array.from(new Set') // naive unique handler
+    .replace(/\| not/g, ' === false')
+    .replace(/\| index\((\d+)\)/g, '.includes($1)')
+    .replace(/add\(\)/g, 'reduce((a,b)=>a+b,0)')
+    .replace(/keys\(\)/g, 'Object.keys')
+    .replace(/\.length/g, '.length')
+    // trailing dot cleanup
+    .replace(/\.$/, '')
+    .trim();
+  return query;
+}
+
+$(document).ready(() => {
+  // footer auto‑update
+  const now  = new Date();
+  const epoch = Math.floor(now.getTime()/1000);
+  const date  = now.toLocaleDateString('en-AU',{year:'numeric',month:'long',day:'numeric'});
+  $('#rev-footer').text(`Revision: ${date} | Epoch: ${epoch}`);
+
+  // Fetch JSON
+  $('#fetch-data').on('click', () => {
+    const url = $('#json-url').val().trim();
+    if (!url) return alert('Please enter a valid JSON URL.');
+
+    $('#loading').removeClass('hidden');
+    $.getJSON(url)
+      .done(data => {
+        fetchedData = data;
+        $('#json-output').text('Data fetched successfully. You can now apply a query.');
+      })
+      .fail((jq,x,err)=>{
+        $('#json-output').text(`Error fetching JSON data: ${x}`);
+        fetchedData=null;
+      })
+      .always(()=>$('#loading').addClass('hidden'));
+  });
+
+  // Apply Query
+  $('#apply-query').on('click', () => {
+    if(!fetchedData) return alert('Fetch data first.');
+    const raw = $('#query-string').val().trim();
+    try {
+      const jsQuery = parseJQToJS(raw);
+      $('#debug-output').text(jsQuery);
+      const result = new Function('data', `return ${jsQuery}`)(fetchedData);
+      $('#json-output').text(JSON.stringify(result, null, 2));
+    } catch(e){
+      $('#json-output').text('Error: '+e.message);
+    }
+  });
+
+  // Generate cleaned output
+  $('#generate-output').on('click',()=>{
+    const cleaned = $('#json-output').text().replace(/[\[\]"]/g,'');
+    $('#copy-output').text(cleaned);
+    $('#copy-output-container').removeClass('hidden');
+  });
+
+  // Clipboard copy with fallback
+  $('#copy-snippet').on('click',()=>{
+    const txt = $('#copy-output').text();
+    if(navigator.clipboard){
+      navigator.clipboard.writeText(txt).then(()=>alert('Copied!')).catch(()=>fallbackCopy(txt));
+    } else fallbackCopy(txt);
+  });
+
+  function fallbackCopy(text){
+    const ta = $('<textarea>').val(text).appendTo('body').select();
+    document.execCommand('copy');
+    ta.remove();
+    alert('Copied!');
+  }
+});
+</script>
 </body>
 </html>
